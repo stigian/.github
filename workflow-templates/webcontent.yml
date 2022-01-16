@@ -4,8 +4,7 @@ on:
   push:
     paths:
     - 'src/web/**'
-    branches: branches: [ $default-branch ]
-
+    branches: [ $default-branch ]
 
 jobs:
   terraform:
