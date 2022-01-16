@@ -1,0 +1,8 @@
+{
+    "name": "Stigian AWS Terraform Runner Workflow",
+    "description": "Runs Terraform against an AWS account.",
+    "iconName": "terraform-icon",
+    "categories": [
+        "HCL"
+    ]
+}

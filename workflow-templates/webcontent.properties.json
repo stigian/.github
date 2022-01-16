@@ -1,0 +1,8 @@
+{
+    "name": "Stigian S3 Copy Terraform Runner Workflow",
+    "description": "Copy static content to an S3 bucket.",
+    "iconName": "react-icon",
+    "categories": [
+        "JavaScript"
+    ]
+}
