@@ -1,4 +1,4 @@
-name: 'Terraform'
+name: 'Stigian Terraform Runner'
 
 on:
   push:
@@ -15,8 +15,11 @@ jobs:
     name: 'Terraform'
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+        contents: read
+        id-token: write
+        pull-requests: write
 
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
       run:
         shell: bash
@@ -31,16 +34,16 @@ jobs:
       id: install
       uses: aws-actions/configure-aws-credentials@v1
       with: 
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: "us-east-2" 
+        aws-region: "us-east-2"
+        role-to-assume: ${{ secrets.AWS_TF_RUNNER_ROLE_ARN }}
+        role-session-name: "StigianGithubTFRunner"
 
-    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+
+    # Install the latest version of Terraform CLI 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
 
-
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    # Initialize terraform working directory
     - name: Terraform Init
       id: init
       run: terraform -chdir=src/iac init
@@ -50,7 +53,7 @@ jobs:
       id: fmt
       run: terraform -chdir=src/iac fmt -check
     
-    # Validate
+    # Terraform Validate
     - name: Terraform Validate
       id: validate
       run: terraform -chdir=src/iac validate -no-color
@@ -63,13 +66,13 @@ jobs:
       continue-on-error: true
 
       # On push to main, build or change infrastructure according to Terraform configuration files
-      # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform -chdir=src/iac apply -auto-approve
 
+    # Leave a comment for the plan in the PR itself showing output of plan to enable review prior to merge
     - name: Update PR
-      uses: actions/github-script@0.9.0
+      uses: actions/github-script@v5
       if: github.event_name == 'pull_request'
       env:
         PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
@@ -91,7 +94,7 @@ jobs:
 
           *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
 
-          github.issues.createComment({
+          github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
