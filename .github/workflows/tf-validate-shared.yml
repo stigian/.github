@@ -27,5 +27,5 @@ jobs:
       - name: Commit terraform fmt
         uses: EndBug/add-and-commit@v9
         with:
-          message: 'Terraform fmt completed'
+          message: 'AUTOMATED ACTION: Terraform fmt completed'
           add: '*.tf'
