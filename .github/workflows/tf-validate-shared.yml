@@ -18,6 +18,14 @@ jobs:
       - name: Terraform Setup
         uses: hashicorp/setup-terraform@v2
       
-      - name: Check format and validate
+      - name: Do format
         run:
-          terraform fmt -check -recursive; terraform init -backend=false; terraform validate
+          terraform fmt -recursive
+      - name: Check validate
+        run:
+          terraform init -backend=false; terraform validate
+      - name: Commit terraform fmt
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'AUTOMATED ACTION: Terraform fmt completed'
+          add: '*.tf'
