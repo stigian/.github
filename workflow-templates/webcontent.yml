@@ -20,41 +20,40 @@ jobs:
     steps:
         # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
         # Configure AWS creds
     - name: Configure credentials
       id: install
-      uses: aws-actions/configure-aws-credentials@v1
-      with: 
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
         aws-region: "us-east-2"
         role-to-assume: ${{ secrets.AWS_TF_RUNNER_ROLE_ARN }}
-        role-session-name: "StigianGithubS3Integration"    
+        role-session-name: "StigianGithubS3Integration"
 
 # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-
+      uses: hashicorp/setup-terraform@v2
 
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       id: init
       run: terraform -chdir=src/iac init
-    
+
     # Get bucket name from terraform state file
     - name: Get Bucket Destination Name
       id: getbucket
       run: terraform -chdir=src/iac output -raw bucketname
-  
+
     - name: Copy Content
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       id: copy
       run: |
         aws s3 sync src/web/ s3://${{ steps.getbucket.outputs.stdout }}/
-    
+
     # Leave comment showing output of copy action
     - name: Update PR
-      uses: actions/github-script@v5
+      uses: actions/github-script@v6
       if: github.event_name == 'pull_request'
       env:
         OUT: "terraform\n${{ steps.copy.outputs.stdout }}"
@@ -62,7 +61,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const output = `#### aws_cli copy status 🖌\`${{ steps.copy.outcome }}\`
-          
+
           <details><summary>Show Plan</summary>
 
           \`\`\`\n

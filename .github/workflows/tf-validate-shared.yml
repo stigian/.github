@@ -3,6 +3,9 @@ name: Validate Terraform
 on:
   workflow_call:
 
+env:
+  TERRAFORM_VERSION: "1.5.5"
+
 defaults:
   run:
     shell: bash
@@ -12,19 +15,24 @@ jobs:
     name: Check with a terraform fmt
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Terraform Setup
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-      
-      - name: Do format
-        run:
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Format Terraform code
+        run: |
           terraform fmt -recursive
-      - name: Check validate
-        run:
-          terraform init -backend=false; terraform validate
-      - name: Commit terraform fmt
+
+      - name: Validate Terraform code
+        run: |
+          terraform init -backend=false -input=false -no-color
+          terraform validate -no-color
+
+      - name: Commit Terraform formatting changes
         uses: EndBug/add-and-commit@v9
         with:
           message: 'AUTOMATED ACTION: Terraform fmt completed'

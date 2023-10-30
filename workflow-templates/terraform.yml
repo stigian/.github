@@ -10,6 +10,9 @@ on:
     - 'src/iac/**'
     branches: [ $default-branch ]
 
+env:
+  TERRAFORM_VERSION: "1.5.5"
+
 jobs:
   terraform:
     name: 'Terraform'
@@ -27,21 +30,22 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     # Configure AWS CLI credentials
     - name: Configure credentials
       id: install
-      uses: aws-actions/configure-aws-credentials@v1
-      with: 
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
         aws-region: "us-east-2"
         role-to-assume: ${{ secrets.AWS_TF_RUNNER_ROLE_ARN }}
         role-session-name: "StigianGithubTFRunner"
 
-
-    # Install the latest version of Terraform CLI 
+    # Install the Terraform CLI
     - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
 
     # Initialize terraform working directory
     - name: Terraform Init
@@ -52,7 +56,7 @@ jobs:
     - name: Terraform Format
       id: fmt
       run: terraform -chdir=src/iac fmt -check
-    
+
     # Terraform Validate
     - name: Terraform Validate
       id: validate
@@ -72,7 +76,7 @@ jobs:
 
     # Leave a comment for the plan in the PR itself showing output of plan to enable review prior to merge
     - name: Update PR
-      uses: actions/github-script@v5
+      uses: actions/github-script@v6
       if: github.event_name == 'pull_request'
       env:
         PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
